@@ -1,7 +1,8 @@
 package helpers
 
 import (
-	"aquarium_lights/internal/models"
+	"aquarium-lights/internal/models"
+
 	"time"
 )
 

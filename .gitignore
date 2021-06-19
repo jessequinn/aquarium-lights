@@ -3,8 +3,10 @@
 !*/
 
 /.idea/
+/bin/
 
 !/internal/**
+!/.github/**
 
 !.gitignore
 !configuration.json
@@ -12,3 +14,5 @@
 !main.go
 !go.mod
 !go.sum
+!Makefile
+!.goreleaser.yml

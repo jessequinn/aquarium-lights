@@ -19,36 +19,16 @@ type Period struct {
 	End   CustomTime `json:"end_time"`
 }
 
-type periodString struct {
-	Start string
-	End   string
+// SetModeOutput sets all pins to output mode.
+func (s *Schedules) SetModeOutput() {
+	for _, v := range s.Schedules {
+		v.Pin.Output()
+	}
 }
 
-//func (s *Schedules) configure(name string, pin rpio.Pin, ps []periodString) error {
-//	var p []Period
-//	layout := "2006-01-02T15:04:05.000Z0700"
-//	for _, v := range ps {
-//		st, err := time.Parse(layout, v.Start)
-//		if err != nil {
-//			return err
-//		}
-//		en, err := time.Parse(layout, v.End)
-//		if err != nil {
-//			return err
-//		}
-//		p = append(p, Period{
-//			Start: st,
-//			End:   en,
-//		})
-//	}
-//	s.Schedules = append(s.Schedules, Schedule{
-//		Name:    name,
-//		Pin:     pin,
-//		Periods: p,
-//	})
-//	return nil
-//}
-
-//func (s *Schedules) ListSchedules() []Schedule {
-//	return s.Schedules
-//}
+// SetHigh sets all pins to high.
+func (s *Schedules) SetHigh() {
+	for _, v := range s.Schedules {
+		v.Pin.High()
+	}
+}

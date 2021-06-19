@@ -2,7 +2,7 @@
   "schedules": [
     {
       "name": "sump",
-      "pin": 22,
+      "pin": 23,
       "periods": [
         {
           "start_time": "2021-01-01T18:00:00.000-0300",
@@ -16,7 +16,7 @@
     },
     {
       "name": "display",
-      "pin": 23,
+      "pin": 22,
       "periods": [
         {
           "start_time":"2021-01-01T10:00:00.000-0300",
