@@ -1,0 +1,14 @@
+*
+
+!*/
+
+/.idea/
+
+!/internal/**
+
+!.gitignore
+!configuration.json
+!README.md
+!main.go
+!go.mod
+!go.sum
