@@ -33,3 +33,19 @@ An example `configuration.json`:
   ]
 }
 ```
+
+An example `systemd` service (`/etc/systemd/system/aquarium-lights.service`):
+
+```
+[Unit]
+Description=Aquarium lights power manager
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/aquarium-lights
+ExecStart=/home/ubuntu/aquarium-lights/aquarium-lights_linux_arm64
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
