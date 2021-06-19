@@ -16,13 +16,10 @@ import (
 	"github.com/stianeikeland/go-rpio"
 )
 
-func inTimeSpan(start, end, check time.Time) bool {
-	return check.After(start) && check.Before(end)
-}
-
 func main() {
 	var relay bool
 
+	// Read configuration from JSON.
 	jsonFile, err := os.Open("configuration.json")
 	if err != nil {
 		panic(err)
@@ -64,7 +61,7 @@ func main() {
 		for _, v := range data.Schedules {
 			for _, p := range v.Periods {
 				relay = false
-				if inTimeSpan(helpers.Bod(p.Start), helpers.Bod(p.End), time.Now()) {
+				if helpers.InTimeSpan(helpers.Bod(p.Start), helpers.Bod(p.End), time.Now()) {
 					relay = true
 				}
 				if relay {
