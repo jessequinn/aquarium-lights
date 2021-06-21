@@ -52,12 +52,10 @@ func (s *Scheduler) process(ctx context.Context, j Job, p, o time.Duration) {
 	for {
 		select {
 		case <-firstC:
-			fmt.Println("firstC")
 			// The ticker has to be started before j as it can take some time to finish
 			ticker = time.NewTicker(p)
 			j(ctx)
 		case <-ticker.C:
-			fmt.Println("ticker")
 			j(ctx)
 		case <-ctx.Done():
 			s.wg.Done()
