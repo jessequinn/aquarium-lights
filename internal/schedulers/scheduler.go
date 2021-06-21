@@ -44,7 +44,7 @@ func (s *Scheduler) process(ctx context.Context, j Job, p, o time.Duration) {
 		first = first.Add(p)
 	}
 	firstC := time.After(first.Sub(time.Now()))
-	fmt.Printf("time now: %v, first: %v\n", time.Now(), first)
+	fmt.Printf("now: %s, initiates: %s\n", time.Now().String(), first.String())
 
 	// Receiving from a nil channel blocks forever
 	ticker := &time.Ticker{C: nil}
