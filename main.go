@@ -1,9 +1,10 @@
 package main
 
 import (
-	"aquarium-lights/internal/helpers"
 	"aquarium-lights/internal/models"
+	"aquarium-lights/internal/schedulers"
 
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,13 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
-	var relay bool
-
 	// Read configuration from JSON.
 	jsonFile, err := os.Open("configuration.json")
 	if err != nil {
@@ -34,7 +32,7 @@ func main() {
 		panic(err)
 	}
 
-	// Open and map memory to access gpio, check for errors.
+	//Open and map memory to access gpio, check for errors.
 	if err := rpio.Open(); err != nil {
 		panic(err)
 	}
@@ -42,41 +40,57 @@ func main() {
 	// Set pin to output mode.
 	data.SetModeOutput()
 
-	// Clean up on ctrl-c and turn lights out.
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		data.SetHigh()
-		os.Exit(0)
-	}()
-
 	// Unmap gpio memory when done.
 	defer rpio.Close()
 
 	// Turn lights off to start.
 	data.SetHigh()
 
-	for {
-		for _, v := range data.Schedules {
-			for _, p := range v.Periods {
-				relay = false
-				if helpers.InTimeSpan(helpers.Bod(p.Start), helpers.Bod(p.End), time.Now()) {
-					relay = true
-				}
-				if relay {
-					v.Pin.Low()
-					ctx := log.WithFields(log.Fields{
-						"name":       v.Name,
-						"pin":        v.Pin,
-						"start_time": p.Start.String(),
-						"end_time":   p.End.String(),
-					})
-					ctx.Info(fmt.Sprintf("%s relay turned on", v.Name))
+	ctx := context.Background()
+	worker := schedulers.NewScheduler()
+
+	// UTC-3 12 = 9
+	for _, v := range data.Schedules {
+		for _, p := range v.Periods {
+			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+				Name: v.Name,
+				Pin:  v.Pin,
+			}), func(ctx context.Context) {
+				// Turn on
+				value, ok := ctx.Value("values").(ContextWithValue)
+				if ok {
+					value.Pin.Low()
+					fmt.Printf("Device %s on pin %d turned on at %s\n", value.Name, value.Pin, time.Now().String())
 				} else {
-					v.Pin.High()
+					fmt.Println("Could not retrieve values from context")
 				}
-			}
+			}, time.Hour*24, time.Hour*time.Duration(p.Start.Hour()+3)+time.Minute*time.Duration(p.Start.Minute()))
+			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+				Name: v.Name,
+				Pin:  v.Pin,
+			}), func(ctx context.Context) {
+				// Turn off
+				value, ok := ctx.Value("values").(ContextWithValue)
+				if ok {
+					value.Pin.High()
+					fmt.Printf("Device %s on pin %d turned off at %s\n", value.Name, value.Pin, time.Now().String())
+				} else {
+					fmt.Println("Could not retrieve values from context")
+				}
+			}, time.Hour*24, time.Hour*time.Duration(p.End.Hour()+3)+time.Minute*time.Duration(p.End.Minute()))
 		}
 	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	<-quit
+	worker.Stop()
+	data.SetHigh()
+}
+
+// ContextWithValue store Name and Pin of each device within a context.
+type ContextWithValue struct {
+	Name string
+	Pin  rpio.Pin
 }
