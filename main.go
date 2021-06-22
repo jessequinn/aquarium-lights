@@ -3,16 +3,17 @@ package main
 import (
 	"aquarium-lights/internal/models"
 	"aquarium-lights/internal/schedulers"
-	"context"
-	"github.com/stianeikeland/go-rpio"
-	"syscall"
 
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
+
+	"github.com/stianeikeland/go-rpio"
 )
 
 func main() {
@@ -39,15 +40,6 @@ func main() {
 	// Set pin to output mode.
 	data.SetModeOutput()
 
-	// Clean up on ctrl-c and turn lights out.
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		data.SetHigh()
-		os.Exit(0)
-	}()
-
 	// Unmap gpio memory when done.
 	defer rpio.Close()
 
@@ -60,22 +52,45 @@ func main() {
 	// UTC-3 12 = 9
 	for _, v := range data.Schedules {
 		for _, p := range v.Periods {
-			worker.Add(ctx, func(ctx context.Context) {
+			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+				Name: v.Name,
+				Pin:  v.Pin,
+			}), func(ctx context.Context) {
 				// Turn on
-				v.Pin.Low()
-				fmt.Printf("%s %d %v\n", v.Name, v.Pin, p.Start)
+				value, ok := ctx.Value("values").(ContextWithValue)
+				if ok {
+					value.Pin.Low()
+					fmt.Printf("Device %s on pin %d turned on at %s\n", value.Name, value.Pin, time.Now().String())
+				} else {
+					fmt.Println("Could not retrieve values from context")
+				}
 			}, time.Hour*24, time.Hour*time.Duration(p.Start.Hour()+3)+time.Minute*time.Duration(p.Start.Minute()))
-			worker.Add(ctx, func(ctx context.Context) {
+			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+				Name: v.Name,
+				Pin:  v.Pin,
+			}), func(ctx context.Context) {
 				// Turn off
-				v.Pin.High()
-				fmt.Printf("%s %d %v\n", v.Name, v.Pin, p.End)
+				value, ok := ctx.Value("values").(ContextWithValue)
+				if ok {
+					value.Pin.High()
+					fmt.Printf("Device %s on pin %d turned off at %s\n", value.Name, value.Pin, time.Now().String())
+				} else {
+					fmt.Println("Could not retrieve values from context")
+				}
 			}, time.Hour*24, time.Hour*time.Duration(p.End.Hour()+3)+time.Minute*time.Duration(p.End.Minute()))
 		}
 	}
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
 	worker.Stop()
+	data.SetHigh()
+}
+
+// ContextWithValue store Name and Pin of each device within a context.
+type ContextWithValue struct {
+	Name string
+	Pin  rpio.Pin
 }
