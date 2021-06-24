@@ -35,7 +35,7 @@ func main() {
 		panic(err)
 	}
 
-	//Open and map memory to access gpio, check for errors.
+	// Open and map memory to access gpio, check for errors.
 	if err := rpio.Open(); err != nil {
 		panic(err)
 	}
