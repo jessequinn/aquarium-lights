@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aquarium-lights/internal/helpers"
 	"aquarium-lights/internal/models"
 	"aquarium-lights/internal/schedulers"
 
@@ -52,12 +53,12 @@ func main() {
 	// UTC-3 12 = 9
 	for _, v := range data.Schedules {
 		for _, p := range v.Periods {
-			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
 				Name: v.Name,
 				Pin:  v.Pin,
 			}), func(ctx context.Context) {
 				// Turn on
-				value, ok := ctx.Value("values").(ContextWithValue)
+				value, ok := ctx.Value("values").(helpers.ContextWithValue)
 				if ok {
 					value.Pin.Low()
 					fmt.Printf("Device %s on pin %d turned on at %s\n", value.Name, value.Pin, time.Now().String())
@@ -65,12 +66,12 @@ func main() {
 					fmt.Println("Could not retrieve values from context")
 				}
 			}, time.Hour*24, time.Hour*time.Duration(p.Start.Hour()+3)+time.Minute*time.Duration(p.Start.Minute()))
-			worker.Add(context.WithValue(ctx, "values", ContextWithValue{
+			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
 				Name: v.Name,
 				Pin:  v.Pin,
 			}), func(ctx context.Context) {
 				// Turn off
-				value, ok := ctx.Value("values").(ContextWithValue)
+				value, ok := ctx.Value("values").(helpers.ContextWithValue)
 				if ok {
 					value.Pin.High()
 					fmt.Printf("Device %s on pin %d turned off at %s\n", value.Name, value.Pin, time.Now().String())
@@ -87,10 +88,4 @@ func main() {
 	<-quit
 	worker.Stop()
 	data.SetHigh()
-}
-
-// ContextWithValue store Name and Pin of each device within a context.
-type ContextWithValue struct {
-	Name string
-	Pin  rpio.Pin
 }
