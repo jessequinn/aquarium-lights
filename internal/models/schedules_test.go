@@ -7,7 +7,7 @@ import (
 )
 
 type SchedulesMock struct {
-	Schedules []Schedule `json:"schedules"`
+	Schedules []Schedule
 }
 
 func (sd *SchedulesMock) SetModeOutput() {}
