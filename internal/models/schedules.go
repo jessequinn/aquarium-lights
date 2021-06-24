@@ -4,6 +4,12 @@ import (
 	"github.com/stianeikeland/go-rpio"
 )
 
+type SchedulesInterface interface {
+	SetModeOutput()
+	SetHigh()
+	GetSchedules() []Schedule
+}
+
 type Schedules struct {
 	Schedules []Schedule `json:"schedules"`
 }
@@ -17,6 +23,11 @@ type Schedule struct {
 type Period struct {
 	Start CustomTime `json:"start_time"`
 	End   CustomTime `json:"end_time"`
+}
+
+// GetSchedules returns all Schedules.
+func (s *Schedules) GetSchedules() []Schedule {
+	return s.Schedules
 }
 
 // SetModeOutput sets all pins to output mode.

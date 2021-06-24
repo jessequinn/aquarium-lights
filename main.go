@@ -18,6 +18,8 @@ import (
 )
 
 func main() {
+	var si models.SchedulesInterface
+
 	// Read configuration from JSON.
 	jsonFile, err := os.Open("configuration.json")
 	if err != nil {
@@ -27,8 +29,8 @@ func main() {
 	defer jsonFile.Close()
 
 	file, _ := ioutil.ReadAll(jsonFile)
-	data := models.Schedules{}
-	err = json.Unmarshal(file, &data)
+	si = &models.Schedules{}
+	err = json.Unmarshal(file, &si)
 	if err != nil {
 		panic(err)
 	}
@@ -39,19 +41,19 @@ func main() {
 	}
 
 	// Set pin to output mode.
-	data.SetModeOutput()
+	si.SetModeOutput()
 
 	// Unmap gpio memory when done.
 	defer rpio.Close()
 
 	// Turn lights off to start.
-	data.SetHigh()
+	si.SetHigh()
 
 	ctx := context.Background()
 	worker := schedulers.NewScheduler()
 
 	// UTC-3 12 = 9
-	for _, v := range data.Schedules {
+	for _, v := range si.GetSchedules() {
 		for _, p := range v.Periods {
 			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
 				Name: v.Name,
@@ -87,5 +89,5 @@ func main() {
 
 	<-quit
 	worker.Stop()
-	data.SetHigh()
+	si.SetHigh()
 }
