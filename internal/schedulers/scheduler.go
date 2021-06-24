@@ -7,13 +7,16 @@ import (
 	"time"
 )
 
+// Job function definition.
 type Job func(ctx context.Context)
 
+// Scheduler struct.
 type Scheduler struct {
 	wg            *sync.WaitGroup
 	cancellations []context.CancelFunc
 }
 
+// NewScheduler function returns *Scheduler.
 func NewScheduler() *Scheduler {
 	return &Scheduler{
 		wg:            new(sync.WaitGroup),
@@ -21,7 +24,7 @@ func NewScheduler() *Scheduler {
 	}
 }
 
-// Add starts goroutine which constantly calls provided job with interval delay
+// Add starts goroutine which constantly calls provided job with interval delay.
 func (s *Scheduler) Add(ctx context.Context, j Job, p, o time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancellations = append(s.cancellations, cancel)
@@ -30,7 +33,7 @@ func (s *Scheduler) Add(ctx context.Context, j Job, p, o time.Duration) {
 	go s.process(ctx, j, p, o)
 }
 
-// Stop cancels all running jobs
+// Stop cancels all running jobs.
 func (s *Scheduler) Stop() {
 	for _, cancel := range s.cancellations {
 		cancel()
@@ -38,6 +41,7 @@ func (s *Scheduler) Stop() {
 	s.wg.Wait()
 }
 
+// process runs schedules using time.After and time.Ticker.
 func (s *Scheduler) process(ctx context.Context, j Job, p, o time.Duration) {
 	first := time.Now().Truncate(p).Add(o)
 	if first.Before(time.Now()) {
