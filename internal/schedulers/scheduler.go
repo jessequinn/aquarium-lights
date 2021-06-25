@@ -2,7 +2,7 @@ package schedulers
 
 import (
 	"context"
-	"fmt"
+	"github.com/apex/log"
 	"sync"
 	"time"
 )
@@ -48,11 +48,13 @@ func (s *Scheduler) process(ctx context.Context, j Job, p, o time.Duration) {
 		first = first.Add(p)
 	}
 	firstC := time.After(first.Sub(time.Now()))
-	fmt.Printf("now: %s, initiates: %s\n", time.Now().String(), first.String())
-
+	logCtx := log.WithFields(log.Fields{
+		"current_time": time.Now().String(),
+		"start_time":   first.String(),
+	})
+	logCtx.Info("Device schedule")
 	// Receiving from a nil channel blocks forever
 	ticker := &time.Ticker{C: nil}
-
 	for {
 		select {
 		case <-firstC:

@@ -1,5 +1,5 @@
 # aquarium-lights
-A simple GO based scheduler that turns "on" a relay attached to a Pi3 microcontroller.
+A simple GO based scheduler that turns "on" and "off" a relay attached to a Pi3 microcontroller.
 
 An example `configuration.json`:
 
