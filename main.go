@@ -4,6 +4,7 @@ import (
 	"aquarium-lights/internal/helpers"
 	"aquarium-lights/internal/models"
 	"aquarium-lights/internal/schedulers"
+	"github.com/apex/log"
 
 	"context"
 	"encoding/json"
@@ -18,6 +19,7 @@ import (
 )
 
 func main() {
+	var relay bool
 	var si models.SchedulesInterface
 
 	// Read configuration from JSON.
@@ -55,6 +57,22 @@ func main() {
 	// UTC-3 12 = 9
 	for _, v := range si.GetSchedules() {
 		for _, p := range v.Periods {
+			relay = false
+			if helpers.InTimeSpan(helpers.Bod(p.Start), helpers.Bod(p.End), time.Now()) {
+				relay = true
+			}
+			if relay {
+				v.Pin.Low()
+				logCtx := log.WithFields(log.Fields{
+					"name":       v.Name,
+					"pin":        v.Pin,
+					"start_time": p.Start.String(),
+					"end_time":   p.End.String(),
+				})
+				logCtx.Info(fmt.Sprintf("Device %s on pin %d turned on at %s\n", v.Name, v.Pin, time.Now().String()))
+			} else {
+				v.Pin.High()
+			}
 			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
 				Name: v.Name,
 				Pin:  v.Pin,
@@ -63,9 +81,17 @@ func main() {
 				value, ok := ctx.Value("values").(helpers.ContextWithValue)
 				if ok {
 					value.Pin.Low()
-					fmt.Printf("Device %s on pin %d turned on at %s\n", value.Name, value.Pin, time.Now().String())
+					logCtx := log.WithFields(log.Fields{
+						"name": value.Name,
+						"pin":  value.Pin,
+						"time": time.Now().String(),
+					})
+					logCtx.Info("Device turned on")
 				} else {
-					fmt.Println("Could not retrieve values from context")
+					logCtx := log.WithFields(log.Fields{
+						"time": time.Now().String(),
+					})
+					logCtx.Info("Could not retrieve values from context")
 				}
 			}, time.Hour*24, time.Hour*time.Duration(p.Start.Hour()+3)+time.Minute*time.Duration(p.Start.Minute()))
 			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
