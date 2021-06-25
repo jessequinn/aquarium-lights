@@ -64,9 +64,9 @@ func main() {
 			if relay {
 				v.Pin.Low()
 				logCtx := log.WithFields(log.Fields{
-					"name": v.Name,
-					"pin":  v.Pin,
-					"time": time.Now().String(),
+					"name":         v.Name,
+					"pin":          v.Pin,
+					"current_time": time.Now().String(),
 				})
 				logCtx.Info("Device turned on")
 			} else {
@@ -82,14 +82,14 @@ func main() {
 				if ok {
 					value.Pin.Low()
 					logCtx := log.WithFields(log.Fields{
-						"name": value.Name,
-						"pin":  value.Pin,
-						"time": time.Now().String(),
+						"name":         value.Name,
+						"pin":          value.Pin,
+						"current_time": time.Now().String(),
 					})
 					logCtx.Info("Device turned on")
 				} else {
 					logCtx := log.WithFields(log.Fields{
-						"time": time.Now().String(),
+						"current_time": time.Now().String(),
 					})
 					logCtx.Info("Could not retrieve values from context")
 				}
@@ -103,14 +103,14 @@ func main() {
 				if ok {
 					value.Pin.High()
 					logCtx := log.WithFields(log.Fields{
-						"name": value.Name,
-						"pin":  value.Pin,
-						"time": time.Now().String(),
+						"name":         value.Name,
+						"pin":          value.Pin,
+						"current_time": time.Now().String(),
 					})
 					logCtx.Info("Device turned off")
 				} else {
 					logCtx := log.WithFields(log.Fields{
-						"time": time.Now().String(),
+						"current_time": time.Now().String(),
 					})
 					logCtx.Info("Could not retrieve values from context")
 				}
