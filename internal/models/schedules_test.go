@@ -8,10 +8,12 @@ import (
 	"github.com/stianeikeland/go-rpio"
 )
 
+// SchedulesMock struct.
 type SchedulesMock struct {
 	Schedules []Schedule
 }
 
+// Mocked functions. Cannot actually mock /dev/mem.
 func (sd *SchedulesMock) SetModeOutput() {}
 func (sd *SchedulesMock) SetHigh()       {}
 
