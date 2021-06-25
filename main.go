@@ -8,7 +8,6 @@ import (
 
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -64,12 +63,11 @@ func main() {
 			if relay {
 				v.Pin.Low()
 				logCtx := log.WithFields(log.Fields{
-					"name":       v.Name,
-					"pin":        v.Pin,
-					"start_time": p.Start.String(),
-					"end_time":   p.End.String(),
+					"name": v.Name,
+					"pin":  v.Pin,
+					"time": time.Now().String(),
 				})
-				logCtx.Info(fmt.Sprintf("Device %s on pin %d turned on at %s\n", v.Name, v.Pin, time.Now().String()))
+				logCtx.Info("Device turned on")
 			} else {
 				v.Pin.High()
 			}
@@ -102,9 +100,17 @@ func main() {
 				value, ok := ctx.Value("values").(helpers.ContextWithValue)
 				if ok {
 					value.Pin.High()
-					fmt.Printf("Device %s on pin %d turned off at %s\n", value.Name, value.Pin, time.Now().String())
+					logCtx := log.WithFields(log.Fields{
+						"name": value.Name,
+						"pin":  value.Pin,
+						"time": time.Now().String(),
+					})
+					logCtx.Info("Device turned off")
 				} else {
-					fmt.Println("Could not retrieve values from context")
+					logCtx := log.WithFields(log.Fields{
+						"time": time.Now().String(),
+					})
+					logCtx.Info("Could not retrieve values from context")
 				}
 			}, time.Hour*24, time.Hour*time.Duration(p.End.Hour()+3)+time.Minute*time.Duration(p.End.Minute()))
 		}
