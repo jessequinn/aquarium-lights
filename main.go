@@ -56,6 +56,7 @@ func main() {
 	// UTC-3 12 = 9
 	for _, v := range si.GetSchedules() {
 		for _, p := range v.Periods {
+			// Check if schedule is NOW.
 			relay = false
 			if helpers.InTimeSpan(helpers.Bod(p.Start), helpers.Bod(p.End), time.Now()) {
 				relay = true
@@ -71,6 +72,7 @@ func main() {
 			} else {
 				v.Pin.High()
 			}
+			// Add all schedules to time.Ticker.
 			worker.Add(context.WithValue(ctx, "values", helpers.ContextWithValue{
 				Name: v.Name,
 				Pin:  v.Pin,
